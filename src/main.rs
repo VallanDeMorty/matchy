@@ -1,4 +1,5 @@
 mod extracto;
+mod nlp_api;
 
 use extracto::{get_article_metadata, get_creds};
 

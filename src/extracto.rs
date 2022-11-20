@@ -63,6 +63,7 @@ pub struct ExtractoCredentialsError {
     pub error: String,
 }
 
+// TODO: move out into an env module
 pub fn get_creds() -> Result<ExtractoCredentials, ExtractoCredentialsError> {
     let url = var("EXTRACTO_URL").map_err(|err| ExtractoCredentialsError {
         error: err.to_string(),
