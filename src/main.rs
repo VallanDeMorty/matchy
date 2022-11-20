@@ -1,5 +1,6 @@
 mod extracto;
-mod nlp_api;
+mod nlp;
+mod raindrop;
 
 use extracto::{get_article_metadata, get_creds};
 

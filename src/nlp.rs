@@ -17,7 +17,7 @@ pub struct ArticleEntity {
     pub salience: f32,
 }
 
-pub async fn get_entities<'a>(
+pub fn get_entities<'a>(
     api_key: &'a String,
     request: &'a AnalizeRequest,
 ) -> impl Future<Output = Result<Vec<ArticleEntity>, String>> + 'a {
