@@ -17,7 +17,17 @@ Simple Levenshtein distance won't work well here.
 
 ## Overview
 
-![Matchy](docs/matchy.png)
+```mermaid
+flowchart TB
+    U([User]) -->|1. add a new bookmark| R([Raindrop])
+    R .->|2. a webhook is triggered| A([Automation\nIFTTT, Zapier, etc.])
+    A .->|3. a webhook to the app| M([Matchy])
+    M -->|4. get the bookmark| R
+    M -->|5. get the article metadata| E([Extracto])
+    M -->|6. extract the keywords| G([GCP NLP API])
+    M -->|7. get the user tags| R
+    M -->|8. set matched tags| R
+```
 
 ## Requirements
 
