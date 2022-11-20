@@ -24,10 +24,23 @@ pub struct Bookmark {
     user_id: i32,
 }
 
+#[derive(Debug)]
+pub struct GetBookmarkError {
+    pub error: String,
+    pub r#type: GetBookmarkErrorType,
+}
+
+#[derive(Debug)]
+pub enum GetBookmarkErrorType {
+    NotFound,
+    ConnectionError,
+    ParsingError,
+}
+
 pub fn get_bookmark<'a>(
     token: &'a String,
     bookmark_id: i32,
-) -> impl Future<Output = Result<Bookmark, String>> + 'a {
+) -> impl Future<Output = Result<Bookmark, GetBookmarkError>> + 'a {
     async move {
         let response = Client::new()
             .get(&format!(
@@ -42,8 +55,14 @@ pub fn get_bookmark<'a>(
             Ok(response) => response
                 .json::<Bookmark>()
                 .await
-                .map_err(|err| err.to_string()),
-            Err(err) => Err(err.to_string()),
+                .map_err(|err| GetBookmarkError {
+                    error: err.to_string(),
+                    r#type: GetBookmarkErrorType::ParsingError,
+                }),
+            Err(err) => Err(GetBookmarkError {
+                error: err.to_string(),
+                r#type: GetBookmarkErrorType::ConnectionError,
+            }),
         };
     }
 }
@@ -74,11 +93,24 @@ struct AddTagsRequest {
     tags: Vec<String>,
 }
 
+#[derive(Debug)]
+pub struct AddTagsError {
+    pub error: String,
+    pub r#type: AddTagsErrorType,
+}
+
+#[derive(Debug)]
+pub enum AddTagsErrorType {
+    BookmarkIsNotFound,
+    ConnectionError,
+    ParsingError,
+}
+
 pub fn add_tags_to_bookmark<'a>(
     token: &'a String,
     bookmark: &'a Bookmark,
     tags: &'a Vec<String>,
-) -> impl Future<Output = Option<String>> + 'a {
+) -> impl Future<Output = Option<AddTagsError>> + 'a {
     async move {
         let response = Client::new()
             .post(&format!(
@@ -93,9 +125,22 @@ pub fn add_tags_to_bookmark<'a>(
         return match response {
             Ok(response) => match response.status().is_success() {
                 true => None,
-                false => Some(response.text().await.unwrap()),
+                false => {
+                    let status = response.status();
+
+                    Some(AddTagsError {
+                        error: response.text().await.unwrap(),
+                        r#type: match status.as_u16() {
+                            404 => AddTagsErrorType::BookmarkIsNotFound,
+                            _ => AddTagsErrorType::ConnectionError,
+                        },
+                    })
+                }
             },
-            Err(err) => Some(err.to_string()),
+            Err(err) => Some(AddTagsError {
+                error: err.to_string(),
+                r#type: AddTagsErrorType::ConnectionError,
+            }),
         };
     }
 }

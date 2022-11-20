@@ -17,10 +17,15 @@ pub struct ArticleEntity {
     pub salience: f32,
 }
 
+#[derive(Debug)]
+pub struct AnalizeError {
+    pub error: String,
+}
+
 pub fn get_entities<'a>(
     api_key: &'a String,
     request: &'a AnalizeRequest,
-) -> impl Future<Output = Result<Vec<ArticleEntity>, String>> + 'a {
+) -> impl Future<Output = Result<Vec<ArticleEntity>, AnalizeError>> + 'a {
     async move {
         let entities_request = AnalizeEntitiesRequest {
             document: Document {
@@ -45,8 +50,12 @@ pub fn get_entities<'a>(
                 .json::<AnalizedEntitiesResponse>()
                 .await
                 .map(|response| response.entities)
-                .map_err(|err| err.to_string()),
-            Err(err) => Err(err.to_string()),
+                .map_err(|err| AnalizeError {
+                    error: err.to_string(),
+                }),
+            Err(err) => Err(AnalizeError {
+                error: err.to_string(),
+            }),
         };
     }
 }
